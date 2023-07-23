@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://hcaptcha.com/1/api.js" async defer></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery library -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.18/dist/sweetalert2.all.min.js"></script> <!-- SweetAlert2 library -->
+  <script>
+    function onSubmit(token) {
+      // Handle form submission after hCaptcha verification
+      generateAndSendToken();
+    }
+
+    function executeCaptcha(event) {
+  event.preventDefault(); // Prevent the form from submitting normally
+  var form = document.getElementById("registrationForm");
+
+  // Perform additional validation
+  if (!validateEmail()) {
+    return;
+  }
+  
+  if (!validatePassword()) {
+    return;
+  }
+  
+  if (!validateToken()) {
+    return;
+  }
+
+      // Display registration complete message
+      Swal.fire({
+        title: "Registration Complete",
+        icon: "success",
+        showConfirmButton: false,
+        timer: 2000 // Display the message for 2 seconds
+      }).then(function () {
+        // Redirect to index.html after the message is displayed
+        window.location.href = "index.html";
+      });
+    }
+
+    function validateEmail() {
+      var emailInput = document.getElementById("email");
+      var email = emailInput.value.trim();
+
+      if (email === "") {
+        Swal.fire({
+          title: "Email Required",
+          icon: "error",
+          text: "Please enter your email address.",
+          timer: 2000
+        });
+        emailInput.focus();
+        return false;
+      }
+
+      // Perform additional email validation using regular expression
+      var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        Swal.fire({
+          title: "Invalid Email",
+          icon: "error",
+          text: "Please enter a valid email address.",
+          timer: 2000
+        });
+        emailInput.focus();
+        return false;
+      }
+
+      return true;
+    }
+
+    function validatePassword() {
+  var passwordInput = document.getElementById("password");
+  var password = passwordInput.value;
+
+  if (password === "") {
+    Swal.fire({
+      title: "Password Required",
+      icon: "error",
+      text: "Please enter a password.",
+      timer: 2000
+    });
+    passwordInput.focus();
+    return false;
+  }
+
+  // Perform additional password validation
+  var strength = getPasswordStrength(password);
+  if (strength === "weak") {
+    Swal.fire({
+      title: "Weak Password",
+      icon: "error",
+      text: "Please choose a stronger password.",
+      timer: 2000
+    });
+    passwordInput.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function generateToken() {
+  var token = generateRandomToken();
+  var generatedTokenSpan = document.getElementById("generatedToken");
+  generatedTokenSpan.innerText = "Generated Token: " + token;
+}
+
+function generateRandomToken() {
+  var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var token = "";
+  for (var i = 0; i < 8; i++) {
+    token += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return token;
+}
+
+function validateToken() {
+  var enteredTokenInput = document.getElementById("token");
+  var enteredToken = enteredTokenInput.value.trim();
+
+  var generatedTokenSpan = document.getElementById("generatedToken");
+  var generatedToken = generatedTokenSpan.innerText.replace("Generated Token: ", "");
+
+  if (enteredToken === "") {
+    Swal.fire({
+      title: "Token Required",
+      icon: "error",
+      text: "Please enter the one-time token.",
+      timer: 2000
+    });
+    enteredTokenInput.focus();
+    return false;
+  }
+
+  if (enteredToken !== generatedToken) {
+    Swal.fire({
+      title: "Invalid Token",
+      icon: "error",
+      text: "The entered token does not match the generated token.",
+      timer: 2000
+    });
+    enteredTokenInput.focus();
+    return false;
+  }
+
+  return true;
+}
+
+function generateAndDisplayToken() {
+  var token = generateRandomToken();
+  var generatedTokenSpan = document.getElementById("generatedToken");
+  generatedTokenSpan.innerText = "Generated Token: " + token;
+}
+
+  </script>
+</head>
+<body>
+  <h1>Register</h1>
+
+  <form id="registrationForm">
+    <label for="email">Email Address:</label>
+    <input type="text" id="email" name="email" required>
+    <br>
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    <div id="passwordStrength"></div>
+    <div class="strength-bar"></div> <!-- Password strength color bar -->
+    <br>
+    <label for="token">One-Time Token:</label>
+    <input type="text" id="token" name="token" required>
+    <br>
+    <span id="generatedToken"></span>
+    <br>
+    <br>
+    <div class="h-captcha" data-sitekey="88c7b68e-da47-4159-be36-2d3387c39d3f"></div> <!-- hCaptcha widget -->
+    <br>
+    <button onclick="generateAndDisplayToken()" type="button">Generate Token</button>
+    <br>
+    <button onclick="executeCaptcha(event)" type="submit">Register</button>
+  </form>
+
+  <script>
+    document.getElementById("password").addEventListener("input", function() {
+      var password = this.value;
+      var strengthText = document.getElementById("passwordStrength");
+      var strengthBar = document.querySelector(".strength-bar");
+
+      // Reset password strength text and color bar
+      strengthText.innerText = "";
+      strengthBar.className = "strength-bar";
+
+      // Evaluate password strength
+      var strength = getPasswordStrength(password);
+
+      // Display password strength feedback
+      if (strength === "weak") {
+        strengthText.innerText = "Weak password";
+        strengthText.style.color = "red";
+        strengthBar.classList.add("weak");
+      } else if (strength === "medium") {
+        strengthText.innerText = "Medium password";
+        strengthText.style.color = "orange";
+        strengthBar.classList.add("medium");
+      } else if (strength === "strong") {
+        strengthText.innerText = "Strong password";
+        strengthText.style.color = "green";
+        strengthBar.classList.add("strong");
+      }
+    });
+
+    function getPasswordStrength(password) {
+      // Password strength assessment algorithm
+      var strength = "weak";
+
+      // Check password length
+      if (password.length >= 8) {
+        strength = "medium";
+
+        // Additional checks for password complexity (e.g., uppercase, lowercase, numbers, special characters)
+        // Check for uppercase letters
+        if (/[A-Z]/.test(password)) {
+          // Check for special characters
+          if (/[!@#$%^&*]/.test(password)) {
+            strength = "strong";
+          }
+        }
+      }
+
+      return strength;
+    }
+  </script>
+</body>
+</html>
